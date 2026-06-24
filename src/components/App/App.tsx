@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import css from './App.module.css';
 import { Toaster, toast } from 'react-hot-toast';
@@ -39,9 +39,7 @@ function App() {
     const data = await fetchMovies(search, page);
     const movies: Movie[] = [];
     const processedData = data;
-    if (data.results.length === 0) {
-      toast('No movies found for your request.');
-    } else {
+    if (data.results.length > 0) {
       for (const movie of data.results) {
         const movieCopy: Movie = structuredClone(movie);
         movieCopy.poster_path = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
@@ -57,7 +55,7 @@ function App() {
     setMovie(movie);
   };
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isSuccess } = useQuery({
     queryKey: ['movie', query, page],
     queryFn: () => handleFetch(query, page),
     enabled: query !== '',
@@ -65,6 +63,12 @@ function App() {
   });
 
   const totalPages = data?.total_pages ?? 0;
+
+  useEffect(() => {
+    if (isSuccess === true && data.results.length === 0) {
+      toast('No movies found for your request.');
+    }
+  }, [isSuccess, data]);
 
   return (
     <div className={css.App}>
